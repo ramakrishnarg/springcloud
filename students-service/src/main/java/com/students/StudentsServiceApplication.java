@@ -52,7 +52,6 @@ class SampleCLR implements CommandLineRunner{
 		Stream.of("Ram","Anu","Siri","Krish","Reddi").forEach(name->studentRepository.save(new Student(name)));
 		studentRepository.findAll().forEach(System.out::println);
 	}
-	//this is dummy committ
 	
 }
 
