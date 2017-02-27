@@ -72,6 +72,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-integration</artifactId>
 		</dependency>
+		
 	</dependencies>
 
 	<dependencyManagement>

@@ -14,8 +14,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.integration.dsl.jpa.JpaRetrievingOutboundGatewaySpec;
 import org.springframework.stereotype.Component;
+
 
 @EnableDiscoveryClient
 @SpringBootApplication
@@ -32,6 +32,9 @@ public class StudentsServiceApplication {
 interface StudentRepository extends JpaRepository<Student, Serializable>{
 	
 }
+
+
+
 
 
 @Component
@@ -54,8 +57,13 @@ class SampleCLR implements CommandLineRunner{
 
 
 @Entity
-class Student{
+class Student implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4509966800694943269L;
+
 	@Id
 	@GeneratedValue
 	private Long id;
