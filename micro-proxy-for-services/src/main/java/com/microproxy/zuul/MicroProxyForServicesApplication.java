@@ -54,8 +54,10 @@ public class MicroProxyForServicesApplication {
 		}
 
 		public List<String> fallback() {
-
-			return new ArrayList<>();
+			List<String> names=new ArrayList<>();
+			names.add("Student Service is down");
+			
+			return names;
 		}
 
 		@HystrixCommand(fallbackMethod = "fallback")
