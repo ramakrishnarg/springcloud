@@ -23,61 +23,50 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
-
-//@EnableCircuitBreaker
+@EnableCircuitBreaker
 @EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL)
 @EnableFeignClients
 @EnableZuulProxy
 @EnableDiscoveryClient
 @SpringBootApplication
 public class MicroProxyForServicesApplication {
-	
-	
-	
 
 	public static void main(String[] args) {
-		
+
 		SpringApplication.run(MicroProxyForServicesApplication.class, args);
 	}
-	
-	public List<String> fallback(){
-		
-		return new ArrayList<>();
-	}
-	
-	
+
 	@FeignClient("student-service")
-	interface StudentReader{
-		@RequestMapping(method=RequestMethod.GET, value="students")
+	interface StudentReader {
+		@RequestMapping(method = RequestMethod.GET, value = "students")
 		Resources<Student> read();
 	}
 
-
 	@RestController
 	@RequestMapping("/students")
-	class StudentApiGateWay{
-		
+	class StudentApiGateWay {
+
 		private final StudentReader studentReader;
-		
+
 		@Autowired
-		public StudentApiGateWay(StudentReader studentReader){
-			this.studentReader=studentReader;
+		public StudentApiGateWay(StudentReader studentReader) {
+			this.studentReader = studentReader;
 		}
-		
-		//@HystrixCommand(fallbackMethod="fallback")
-		@GetMapping(value="/names")
-		public List<String> getStudentNames(){
-			
-			Collection<Student> students=studentReader.read().getContent();
+
+		public List<String> fallback() {
+
+			return new ArrayList<>();
+		}
+
+		@HystrixCommand(fallbackMethod = "fallback")
+		@GetMapping(value = "/names")
+		public List<String> getStudentNames() {
+
+			Collection<Student> students = studentReader.read().getContent();
 			return students.stream().map(Student::getName).collect(Collectors.toList());
-			
+
 		}
-		
+
 	}
-	
-	
-	
-	
-	
-		
+
 }
