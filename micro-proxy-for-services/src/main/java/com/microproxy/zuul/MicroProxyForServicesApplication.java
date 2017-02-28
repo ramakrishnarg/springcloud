@@ -1,5 +1,6 @@
 package com.microproxy.zuul;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,18 +8,23 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.config.EnableHypermediaSupport;
+import org.springframework.integration.config.EnableMessageHistory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
+
+//@EnableCircuitBreaker
 @EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL)
 @EnableFeignClients
 @EnableZuulProxy
@@ -33,6 +39,12 @@ public class MicroProxyForServicesApplication {
 		
 		SpringApplication.run(MicroProxyForServicesApplication.class, args);
 	}
+	
+	public List<String> fallback(){
+		
+		return new ArrayList<>();
+	}
+	
 	
 	@FeignClient("student-service")
 	interface StudentReader{
@@ -52,6 +64,7 @@ public class MicroProxyForServicesApplication {
 			this.studentReader=studentReader;
 		}
 		
+		//@HystrixCommand(fallbackMethod="fallback")
 		@GetMapping(value="/names")
 		public List<String> getStudentNames(){
 			
@@ -59,9 +72,6 @@ public class MicroProxyForServicesApplication {
 			return students.stream().map(Student::getName).collect(Collectors.toList());
 			
 		}
-		
-		
-		
 		
 	}
 	
