@@ -12,11 +12,19 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.Input;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.integration.annotation.IntegrationComponentScan;
+import org.springframework.integration.annotation.MessageEndpoint;
+import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.SubscribableChannel;
 import org.springframework.stereotype.Component;
 
-
+@IntegrationComponentScan
+@EnableBinding(StudentChannels.class)
 @EnableDiscoveryClient
 @SpringBootApplication
 public class StudentsServiceApplication {
@@ -27,12 +35,35 @@ public class StudentsServiceApplication {
 	}
 }
 
+interface StudentChannels{
+	
+	@Input
+	SubscribableChannel input();
+	
+}
+
 
 @RepositoryRestResource
 interface StudentRepository extends JpaRepository<Student, Serializable>{
 	
 }
 
+
+@MessageEndpoint
+class StudentProcessor{
+	
+	private StudentRepository studentRepository;
+	
+	public StudentProcessor(StudentRepository studentRepository){
+		this.studentRepository=studentRepository;
+	}
+	
+	@ServiceActivator(inputChannel="input")
+	public void onNewStudent(String name){
+		studentRepository.save(new Student(name));
+	}
+	
+}
 
 
 

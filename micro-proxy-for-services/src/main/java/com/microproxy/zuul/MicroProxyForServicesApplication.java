@@ -13,16 +13,25 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.config.EnableHypermediaSupport;
-import org.springframework.integration.config.EnableMessageHistory;
+import org.springframework.integration.annotation.Gateway;
+import org.springframework.integration.annotation.IntegrationComponentScan;
+import org.springframework.integration.annotation.MessagingGateway;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 
+@IntegrationComponentScan
+@EnableBinding (StudentChannels.class)
 @EnableCircuitBreaker
 @EnableHypermediaSupport(type = EnableHypermediaSupport.HypermediaType.HAL)
 @EnableFeignClients
@@ -35,11 +44,28 @@ public class MicroProxyForServicesApplication {
 
 		SpringApplication.run(MicroProxyForServicesApplication.class, args);
 	}
+	
+
+}
 
 	@FeignClient("student-service")
 	interface StudentReader {
 		@RequestMapping(method = RequestMethod.GET, value = "students")
 		Resources<Student> read();
+	}
+	
+	@MessagingGateway
+	interface StudentWriter{
+		
+		@Gateway(requestChannel="outputStudent")
+		void write(String name);
+	}
+	
+	interface StudentChannels{
+		
+		@Output
+		MessageChannel outputStudent();
+		
 	}
 
 	@RestController
@@ -47,10 +73,13 @@ public class MicroProxyForServicesApplication {
 	class StudentApiGateWay {
 
 		private final StudentReader studentReader;
+		private final StudentWriter studentWriter;
+
 
 		@Autowired
-		public StudentApiGateWay(StudentReader studentReader) {
+		public StudentApiGateWay(StudentReader studentReader,StudentWriter studentWriter) {
 			this.studentReader = studentReader;
+			this.studentWriter = studentWriter;
 		}
 
 		public List<String> fallback() {
@@ -60,7 +89,7 @@ public class MicroProxyForServicesApplication {
 			return names;
 		}
 
-		@HystrixCommand(fallbackMethod = "fallback")
+		@HystrixCommand(	)
 		@GetMapping(value = "/names")
 		public List<String> getStudentNames() {
 
@@ -68,7 +97,15 @@ public class MicroProxyForServicesApplication {
 			return students.stream().map(Student::getName).collect(Collectors.toList());
 
 		}
+		
+		@PostMapping(value="/student")
+		public void saveStudentNames(@RequestBody Student student){
+			
+			this.studentWriter.write(student.getName());
+			
+			
+			
+		}
 
 	}
 
-}
